@@ -113,6 +113,7 @@ function App() {
         {btnValues.flat().map((btn, i) => {
           return (
             <Button
+              key={i}
               className={btn === "=" ? "equals" : btn === "AC" ? "delete" : ""}
               value={btn}
               onClick={
