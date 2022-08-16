@@ -3,6 +3,7 @@ import Wrapper from "./components/Wrapper";
 import ButtonBox from "./components/ButtonBox";
 import Button from "./components/Button";
 import Screen from "./components/Screen";
+const { ipcRenderer } = window.require("electron");
 
 function App() {
   const [calc, setcalc] = useState({ sign: "", num: 0, result: 0 });
@@ -17,92 +18,57 @@ function App() {
   const numClickHandler = (e) => {
     e.preventDefault();
     const value = e.target.innerHTML;
-    setcalc({
-      ...calc,
-      num:
-        calc.num === 0 && value === "0"
-          ? "0"
-          : calc.num % 1 === 0
-          ? Number(calc.num + value)
-          : calc.num + value,
-      result: !calc.sign ? 0 : calc.result,
+    ipcRenderer.send("click:num", { value, calc });
+    ipcRenderer.on("num:clicked", (event, obj) => {
+      setcalc({ ...obj.calc });
     });
   };
 
   const decimalClickHandler = (e) => {
     e.preventDefault();
     const value = e.target.innerHTML;
-    setcalc({
-      ...calc,
-      num: !calc.num.toString().includes(".") ? calc.num + value : calc.num, //to avoid multiple decimal point
+    ipcRenderer.send("click:decimal", { value, calc });
+    ipcRenderer.on("decimal:clicked", (event, obj) => {
+      setcalc({ ...obj.calc });
     });
   };
 
   const operatorClickHandler = (e) => {
     e.preventDefault();
     const value = e.target.innerHTML;
-    setcalc({
-      ...calc,
-      result: !calc.result && calc.num ? calc.num : calc.result,
-      sign: value,
-      num: 0, //to result number while calculating
+    ipcRenderer.send("click:operator", { value, calc });
+    ipcRenderer.on("operator:clicked", (event, obj) => {
+      setcalc({ ...obj.calc });
     });
   };
 
   const equalsClickHandler = () => {
     if (calc.num && calc.sign) {
-      // Function to perform calculation
-      const calculateFunction = (a, b, operator) => {
-        return operator === "+"
-          ? a + b
-          : operator === "-"
-          ? a - b
-          : operator === "/"
-          ? a / b
-          : a * b;
-      };
-
-      setcalc({
-        ...calc,
-        result:
-          calc.num === "0" && calc.sign === "/"
-            ? "can't divide with 0"
-            : calculateFunction(
-                Number(calc.result),
-                Number(calc.num),
-                calc.sign
-              ),
-        num: 0,
-        sign: "",
+      ipcRenderer.send("click:equals", calc);
+      ipcRenderer.on("equals:clicked", (event, calcObj) => {
+        setcalc({ ...calcObj });
       });
     }
   };
 
   const percentClickHandler = () => {
-    let num = calc.num ? parseFloat(calc.num) : 0;
-    let result = calc.result ? parseFloat(calc.result) : 0;
-    setcalc({
-      ...calc,
-      num: (num /= Math.pow(100, 1)),
-      result: (result /= Math.pow(100, 1)),
+    ipcRenderer.send("click:percent", calc);
+    ipcRenderer.on("percent:clicked", (event, calcObj) => {
+      setcalc({ ...calcObj });
     });
   };
 
   const invertClickHandler = () => {
-    setcalc({
-      ...calc,
-      num: calc.num ? calc.num * -1 : 0,
-      result: calc.result ? calc.result * -1 : 0,
-      sign: "",
+    ipcRenderer.send("click:invert", calc);
+    ipcRenderer.on("invert:clicked", (event, calcObj) => {
+      setcalc({ ...calcObj });
     });
   };
 
   const resultClickHandler = () => {
-    setcalc({
-      ...calc,
-      num: 0,
-      sign: "",
-      result: 0,
+    ipcRenderer.send("click:reset", calc);
+    ipcRenderer.on("reset:clicked", (event, calcObj) => {
+      setcalc({ ...calcObj });
     });
   };
 
